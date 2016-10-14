@@ -13,38 +13,55 @@ margin-bottom: 50px;
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript">
 $(function(){
-	$('#locatedarea').click(function(e){
-		var areaOffset = $('#locatedarea').offset();
-		var offsetTop = ((e.pageY)-(areaOffset.top));
-		var offsetLeft = ((e.pageX)-(areaOffset.left));
+$('#locatedarea').click(function(e){
+var areaOffset = $('#locatedarea').offset();
+var offsetTop = ((e.pageY)-(areaOffset.top));
+var offsetLeft = ((e.pageX)-(areaOffset.left));
 
-		alert('X = ' + offsetLeft + 'px, Y = ' + offsetTop + 'px');
-		$('#locatedpoint').css({top:(offsetTop),left:(offsetLeft),display:'block'}).attr('title','TOP : '+(offsetTop)+'px | LEFT : '+(offsetLeft)+'px');
-	});
+$('#locatedpoint').css({top:(offsetTop),left:(offsetLeft),display:'block'}).attr('title','TOP : '+(offsetTop)+'px | LEFT : '+(offsetLeft)+'px');
+$('#outputleft').html(offsetLeft);
+$('#outputtop').html(offsetTop);
+});
 });
 </script>
 {% endblock %}
 {% block content %}
 <h1 class="page-header">マンガのアノテーション</h1>
 <div align="center">
-  <b>{{ use_form.flag.label }}: </b>
-  {% for i in use_form.flag %}
-  {{ i }}
-  {% endfor %}<br>
-  {{ utter_form.label }}
-  {{ utter_form }}<br>
-  <b>{{ speaker_form.bubble.label}}: </b>
-  {% for i in speaker_form.bubble %}
-  {{ i }}
-  {% endfor %}<br>
-  <b>{{ posi_form.flag.label }}: </b>
-  {% for i in posi_form.flag %}
-  {{ i }}
-  {% endfor %}<br>
-  
+  {% if message %}
+  {{ message }}
+  {% endif %}
+  <form method="POST" action="">
+    {% csrf_token %}
+    <table class="table"><tr><td>
+	  <b>{{ use_form.flag.label }}: </b></td><td>
+	  <div class="btn-group btn-group-ss" data-toggle="buttons">	    
+	    {% for i in use_form.flag %}
+	    <label class="btn btn-default" autocomplete="off">
+	      {{ i }}
+	    </label>
+	    {% endfor %}
+	  </div>
+      </td></tr><tr><td>
+	  <b>{{ speaker_form.bubble.label}}: </b></td><td>
+	  <div class="btn-group btn-group-s" data-toggle="buttons">
+	    {% for i in speaker_form.bubble %}
+	    <label class="btn btn-default" autocomplete="off">
+	      {{ i }}
+	    </label>
+	    {% endfor %}
+	  </div>
+      </td></tr><tr><td colspan="2" align="center">
+  {% if person_num %}
+  <input type="submit" value="登録" name="regist">
+  {% else %}
+  <input type="submit" value="確認" name="confirm">
+  {% endif %}
+    </td></tr></table>
+  </form>
 </div>
 <div align="center">
   {% load static %}
-  <img src="{% static 'img/test.png' %}"} id="locatedarea" border="5">
+  <img src="{% static image %}"} id="locatedarea">
 </div><!--/#locatedarea-->
 {% endblock content %}
