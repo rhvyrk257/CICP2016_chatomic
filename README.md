@@ -6,6 +6,8 @@ pip install django-bootstrap-form
 以下のコマンドを入力することでローカルで起動
 python manage.py runserver
 
-
 確認はここ
 http://127.0.0.1:8000/comic/
+
+いじるファイル
+comic/views.py #各ページの動作を操作,
