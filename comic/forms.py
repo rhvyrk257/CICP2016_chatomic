@@ -16,6 +16,34 @@ BUBBLE_NUM = (
     ('4','4こ以上'),
 )
 
+USE = (
+    ('0','1人'),
+    ('1','2人以上')
+)
+
+PONE = (
+    ('0','ポジティブ'),
+    ('1','ネガティブ')
+)
+
+class UseForm(forms.Form):
+    flag = forms.ChoiceField(
+        label = "喋っている人",
+        required=False,
+        widget=forms.RadioSelect(),
+        choices=USE,
+    )
+
+
+class PositiveForm(forms.Form):
+    flag = forms.ChoiceField(
+        label = "ポジネガ判定",
+        required=False,
+        widget=forms.RadioSelect(),
+        choices=PONE,
+    )
+    
+
 class UtterForm(forms.Form):
     utter = forms.CharField(
         label = "セリフ",

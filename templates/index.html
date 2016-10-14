@@ -10,41 +10,41 @@ body {
 margin-bottom: 50px;
 }
 </style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript">
-  <!--//
-      jQuery.noConflict();
-      var j$ = jQuery;
-      j$(function() {
-          new Cropper.Img("image", {
-              onEndCrop: function(coords, dimensions) {
-                  j$("#crop_x").val(coords.x1 + ":" + coords.y1);
-                  j$("#crop_y").val(coords.x2 + ":" + coords.y2);
-                  j$("#crop_width").val(dimensions.width);
-                  j$("#crop_height").val(dimensions.height);
-              }
-          });
-      });
-      //-->
+$(function(){
+	$('#locatedarea').click(function(e){
+		var areaOffset = $('#locatedarea').offset();
+		var offsetTop = ((e.pageY)-(areaOffset.top));
+		var offsetLeft = ((e.pageX)-(areaOffset.left));
+
+		alert('X = ' + offsetLeft + 'px, Y = ' + offsetTop + 'px');
+		$('#locatedpoint').css({top:(offsetTop),left:(offsetLeft),display:'block'}).attr('title','TOP : '+(offsetTop)+'px | LEFT : '+(offsetLeft)+'px');
+	});
+});
 </script>
 {% endblock %}
 {% block content %}
 <h1 class="page-header">マンガのアノテーション</h1>
 <div align="center">
+  <b>{{ use_form.flag.label }}: </b>
+  {% for i in use_form.flag %}
+  {{ i }}
+  {% endfor %}<br>
   {{ utter_form.label }}
   {{ utter_form }}<br>
-  <b>{{ speaker_form.bubble.label}}：</b>
+  <b>{{ speaker_form.bubble.label}}: </b>
   {% for i in speaker_form.bubble %}
   {{ i }}
-  {% endfor %}
-<center id="imageContainer">
-  {% load static %}
-    <img src="{% static "img/newgame.jpg" %}" alt="annotate_img" id="image" width="60%" /><br>
-</center>
-<div>
-<div>x:<input type="text" id="crop_x" /></div>
-<div>y:<input type="text" id="crop_y" /></div>
-<div>w:<input type="text" id="crop_width" /></div>
-<div>h:<input type="text" id="crop_height" /></div>
+  {% endfor %}<br>
+  <b>{{ posi_form.flag.label }}: </b>
+  {% for i in posi_form.flag %}
+  {{ i }}
+  {% endfor %}<br>
+  
 </div>
-
+<div align="center">
+  {% load static %}
+  <img src="{% static 'img/test.png' %}"} id="locatedarea" border="5">
+</div><!--/#locatedarea-->
 {% endblock content %}

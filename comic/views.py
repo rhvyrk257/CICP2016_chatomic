@@ -7,10 +7,14 @@ from . import forms#,models
 import re,glob,random
 
 def index(request):
+    use_form=forms.UseForm(request.GET or None)
     utter_form=forms.UtterForm(request.GET or None)
     speaker_form=forms.SpeakerForm(request.GET or None)
+    posi_form=forms.PositiveForm(request.GET or None)
     d={
+        'use_form' : use_form,
         'utter_form' : utter_form,
         'speaker_form' : speaker_form,
+        'posi_form' : posi_form,
     }
     return render(request, 'index.html', d)
