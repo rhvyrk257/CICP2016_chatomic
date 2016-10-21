@@ -36,12 +36,13 @@ def index(request):
         bubble_num=request.session['pre_bnum']
         print(person_num)
         print(bubble_num)
-        if int(person_num) >=1 and int(bubble_num) >=0:
+        if int(person_num) ==1 and int(bubble_num) >=0 and int(bubble_num) <=2:
             print("使える")
             flags=1
         else:
             print("使えない")
             flags=0
+        #登録
         models.ComicInfo.objects.create(
             file_name=image,
             person_num=person_num,
