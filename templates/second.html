@@ -4,15 +4,22 @@
 <style>
 table {
 margin-top: 8px;
-
 }
 body {
 margin-bottom: 50px;
 }
 </style>
+<script>
+  function getXY(e) {
+    x = e.pageX - $("#hoge").offset()["left"];
+    y = e.pageY - $("#hoge").offset()["top"];
+    $("#pos_x").text(x);
+    $("#pos_y").text(y);
+  }
+</script>
 {% endblock %}
 {% block content %}
-<h1 class="page-header">マンガのアノテーション 1</h1>
+<h1 class="page-header">マンガのアノテーション 2</h1>
 {% ifequal rest 0 %}
 <h2 align="center">おわり</h2>
 <h3 align="center">おつかれさまでした</h3>
@@ -24,31 +31,29 @@ margin-bottom: 50px;
   <form method="POST" action="">
     {% csrf_token %}
     <table class="table"><tr><td>
-	  <b>{{ use_form.flag.label }}: </b></td><td>
-	  <div class="btn-group btn-group-ss" data-toggle="buttons">	    
-	    {% for i in use_form.flag %}
-	    <label class="btn btn-default" autocomplete="off">
-	      {{ i }}
-	    </label>
-	    {% endfor %}
-	  </div>
+	  <b>{{ utter_form1.utter1.label }}: </b></td><td>
+	  {{ utter_form1.utter1 }}
       </td></tr><tr><td>
-	  <b>{{ speaker_form.bubble.label}}: </b></td><td>
+	  <b>{{ utter_form2.utter2.label }}: </b></td><td>
+	  {{ utter_form2.utter2 }}
+      </td></tr><tr><td>
+	  <b>{{ positive_form.pn.label}}: </b></td><td>
 	  <div class="btn-group btn-group-s" data-toggle="buttons">
-	    {% for i in speaker_form.bubble %}
+	    {% for i in positive_form.pn %}
 	    <label class="btn btn-default" autocomplete="off">
 	      {{ i }}
 	    </label>
 	    {% endfor %}
 	  </div>
       </td></tr><tr><td colspan="2" align="center">
-	  <input type="submit" value="登録" name="regist">
+	  <b>x1:</b><span id="pos_x">0</span>, <b>y1:</b><span id="pos_y">0</span>
+      </td></tr><tr><td colspan="2" align="center">
+	  {% load static %}
+	  {% for i in bubble_num %}
+	  <input type="image" src="{% static image %}" name="regist{{ i }}">
+	  {% endfor %}
     </td></tr></table>
   </form>
-</div>
-<div align="center">
-  {% load static %}
-  <img src="{% static image %}"}>
 </div>
 {% endifequal %}
 {% endblock content %}

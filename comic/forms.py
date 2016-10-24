@@ -43,14 +43,21 @@ class PositiveForm(forms.Form):
         widget=forms.RadioSelect(),
         choices=PONE,
     )
-    
 
-class UtterForm(forms.Form):
-    utter = forms.CharField(
-        label = "セリフ",
-        max_length=400,
+class UtterForm1(forms.Form):
+    utter1 = forms.CharField(
+        label = "セリフ1",
+        max_length=1000,
         required=False,
-        widget=forms.TextInput()
+        widget=forms.TextInput(attrs={'size':'100'})
+)
+
+class UtterForm2(forms.Form):
+    utter2 = forms.CharField(
+        label = "セリフ2",
+        max_length=1000,
+        required=False,
+        widget=forms.TextInput(attrs={'size':'100'})
 )
 
 class SpeakerForm(forms.Form):
