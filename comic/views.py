@@ -6,6 +6,7 @@ from django.forms.formsets import formset_factory
 from . import forms,models
 import re,glob,random,os
 from collections import defaultdict
+from PIL import Image
 
 def select_img(comiclists,PATH):
     done=[]
@@ -24,7 +25,7 @@ def select_img(comiclists,PATH):
             except:
                 pass
     print("ぜんぶ",end="")
-    print(not_done)
+    print(len(not_done))
 #    try:
 #        h=models.Doing.objects.filter(comic_name=categ_id, flag=1)
 #        for i in h:
@@ -32,21 +33,21 @@ def select_img(comiclists,PATH):
 #    except:
 #        pass
     print("おわった",end="")
-    print(done)
+    print(len(done))
     for i in done:
         not_done.remove(i)
     print("まだ",end="")
-    print(not_done)
+    print(len(not_done))
     return not_done
 
 def select_img2(categ_id,PATH):
     img_files=[]
-    h=models.ComicInfo.objects.filter(comic_name=categ_id)
+    h=models.ComicInfo.objects.filter(availability=1)
     for i in h:
         if i.availability==1:
             if i.x1==0 and i.y1==0:
                 print(i.bubble_id)
-                img_files.append([categ_id,i.bubble_id])
+                img_files.append([i.comic_name,i.bubble_id])
     print(img_files)
     return img_files
 
@@ -157,8 +158,16 @@ def index(request):
 
 #アノテーション２段階目
 def second(request):
+    comiclists=defaultdict(lambda:0)
     PATH=os.path.abspath(__file__)
     PATH=re.sub("comic/views.py","",PATH)
+    with open(PATH+"com.list","r") as f1:
+        for line in f1:
+            line=line.strip("\n")
+            line=line.strip()
+            num,name=line.split(" ")
+            comiclists[num]=name
+    print(comiclists)
     print(PATH)
     bubble=[]
     message=""
@@ -186,26 +195,39 @@ def second(request):
             if len(request.POST["utter1"])!=0 and "pn" in request.POST.keys():
                 print("登録",end="")
                 print(request.session["bubble_id"])
-                h=models.ComicInfo.objects.get(comic_name=request.session["comic_name"],bubble_id=request.session["bubble_id"])
-                h.x1=request.POST["regist0.x"]
-                h.y1=request.POST["regist0.y"]
-                h.utter1=request.POST['utter1']
-                if len(request.POST["utter2"])!=0:
-                    h.utter2=request.POST["utter2"]
-                h.save()
+                getColor=Image.open(PATH+"/static/"+request.session["image"])
+                color=getColor.getpixel((int(request.POST["regist0.x"]),int(request.POST["regist0.y"])))
+                print("色：%s" %color)
+                if color==255:
+                    h=models.ComicInfo.objects.get(comic_name=request.session["comic_name"],bubble_id=request.session["bubble_id"])
+                    h.x1=request.POST["regist0.x"]
+                    h.y1=request.POST["regist0.y"]
+                    h.utter1=request.POST['utter1']
+                    if len(request.POST["utter2"])!=0:
+                        h.utter2=request.POST["utter2"]
+                    h.save()
+                else:
+                    message="背景が白の部分を選択してください"
         # 2回目が押された時
         if "regist1.x" in request.POST and "regist1.y" in request.POST:
             print("登録",end="")
             print(request.session["comic_name"])
             print(request.session["bubble_id"])
-            h=models.ComicInfo.objects.get(comic_name=request.session["comic_name"],bubble_id=request.session["bubble_id"])
-            h.x2=request.POST["regist1.x"]
-            h.y2=request.POST["regist1.y"]
-            h.save()
-            
+            getColor=Image.open(PATH+"/static/"+request.session["image"])
+            color=getColor.getpixel((int(request.POST["regist1.x"]),int(request.POST["regist1.y"])))
+            print("色：%s" %color)
+            if color==255:
+
+                h=models.ComicInfo.objects.get(comic_name=request.session["comic_name"],bubble_id=request.session["bubble_id"])
+                h.x2=request.POST["regist1.x"]
+                h.y2=request.POST["regist1.y"]
+                h.save()
+            else:
+                message="背景が白の部分を選択してください"
+                
         if "bubble_num" in request.session.keys():
             if request.session["bubble_num"]==2 and models.ComicInfo.objects.get(comic_name=request.session["comic_name"],bubble_id=request.session["bubble_id"]).y2==0:
-                image="img/"+comiclists[comic_name]+"/"+bubble_id+".jpg"
+                image="img/"+str(comiclists[comic_name])+"/"+bubble_id+".jpg"
                 image=request.session["image"]
                 bubble_num=request.session["bubble_num"]
                 comic_name=request.session["comic_name"]
@@ -227,7 +249,7 @@ def second(request):
                     print(show)
                     comic_name=str(show[0])
                     bubble_id=str(show[1])
-                    image="img/"+comiclists[comic_name]+"/"+bubble_id+".jpg"
+                    image="img/"+str(comiclists[comic_name])+"/"+bubble_id+".jpg"
                     request.session["image"]=image
                     print(image)
                     bubble_num=models.ComicInfo.objects.get(comic_name=comic_name, bubble_id=bubble_id).bubble_num
@@ -272,6 +294,7 @@ def second(request):
         'positive_form' : positive_form,
         'bubble_num' : bubble,
         'rest' : rest,
+        'message' : message,
     }
     # index.html で表示させる
     return render(request, 'second.html', d)
