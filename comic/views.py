@@ -5,26 +5,32 @@ from django.http import QueryDict
 from django.forms.formsets import formset_factory
 from . import forms,models
 import re,glob,random,os
+from collections import defaultdict
 
-def select_img(categ_id,PATH):
-    img_files=glob.glob(PATH+"static/img/"+str(categ_id)+"/*.jpg")
+def select_img(comiclists,PATH):
     done=[]
     not_done=[]
-    for image in img_files:
-        img_id=re.sub(PATH+"static/img/"+str(categ_id)+"/","",image)
-        img_id=re.sub(".jpg","",img_id)
-        not_done.append([categ_id,img_id])
-        try:
-            h=models.ComicInfo.objects.filter(comic_name=categ_id).get(bubble_id=img_id)
-            done.append([categ_id,img_id])
-        except:
-            pass
-    try:
-        h=models.Doing.objects.filter(comic_name=categ_id, flag=1)
-        for i in h:
-            done.append([categ_id,str(i.bubble_id)])
-    except:
-        pass
+
+    for categ_id in comiclists.keys():
+        print(comiclists[str(categ_id)])
+        img_files=glob.glob(PATH+"static/img/"+comiclists[str(categ_id)]+"/*.jpg")
+        for image in img_files:
+            img_id=re.sub(PATH+"static/img/"+comiclists[str(categ_id)]+"/","",image)
+            img_id=re.sub(".jpg","",img_id)
+            not_done.append([categ_id,img_id])
+            try:
+                h=models.ComicInfo.objects.filter(comic_name=int(categ_id)).get(bubble_id=img_id)
+                done.append([categ_id,img_id])
+            except:
+                pass
+    print("ぜんぶ",end="")
+    print(not_done)
+#    try:
+#        h=models.Doing.objects.filter(comic_name=categ_id, flag=1)
+#        for i in h:
+#            done.append([categ_id,str(i.bubble_id)])
+#    except:
+#        pass
     print("おわった",end="")
     print(done)
     for i in done:
@@ -46,9 +52,17 @@ def select_img2(categ_id,PATH):
 
 #アノテーション１段階目
 def index(request):
+    comiclists=defaultdict(lambda:0)
     PATH=os.path.abspath(__file__)
     PATH=re.sub("comic/views.py","",PATH)
     print(PATH)
+    with open(PATH+"com.list","r") as f1:
+        for line in f1:
+            line=line.strip("\n")
+            line=line.strip()
+            num,name=line.split(" ")
+            comiclists[num]=name
+    print(comiclists)
     person_num=0
     bubble_num=0
     flags=0
@@ -59,13 +73,33 @@ def index(request):
     speaker_form=forms.SpeakerForm(request.GET or None)
     image=""
     ### 表示するコマを設定
-    img_list=select_img(0,PATH)
+    img_list=select_img(comiclists,PATH)
     rest=len(img_list)
     if rest==0:
-        h=models.Doing.objects.get(comic_name=request.session['comic_name'],bubble_id=request.session['bubble_id'])
-        h.flag=0
-        h.save()
+        try:
+            print(request.session['comic_name'])
+            print(request.session['bubble_id'])
+#            h=models.Doing.objects.get(comic_name=request.session['comic_name'],bubble_id=request.session['bubble_id'])
+#            h.flag=0
+#            h.save()
+        except:
+            pass
+        if 'flag' in request.POST.keys():
+            if int(request.POST['flag']) == 1 and int(request.POST['bubble']) >=1 and int(request.POST['bubble']) <=2:
+                print("使える")
+                flags=1
+            else:
+                print("使えない")
+                flags=0
+            models.ComicInfo.objects.create(
+                comic_name=request.session['comic_name'],
+                bubble_id=request.session['bubble_id'],
+                person_num=request.POST['flag'],
+                bubble_num=request.POST['bubble'],
+                availability=flags,
+            )
         print("おわり")
+        request.session.flush()
     else:
         print(request.POST.keys())
         if "regist" in request.POST:
@@ -90,9 +124,9 @@ def index(request):
                     bubble_num=bubble_num,
                     availability=flags,
                 )
-                h=models.Doing.objects.get(comic_name=request.session['comic_name'],bubble_id=request.session['bubble_id'])
-                h.flag=0
-                h.save()
+#                h=models.Doing.objects.get(comic_name=request.session['comic_name'],bubble_id=request.session['bubble_id'])
+#                h.flag=0
+#                h.save()
                 print("登録")
             else:
                 message = '全ての項目を入力してください'
@@ -101,12 +135,12 @@ def index(request):
         print(show)
         comic_name=str(show[0])
         bubble_id=str(show[1])
-        h=models.Doing.objects.get(comic_name=comic_name,bubble_id=bubble_id)
-        h.flag=1
-        h.save()
+#        h=models.Doing.objects.get(comic_name=comic_name,bubble_id=bubble_id)
+#        h.flag=1
+#        h.save()
         request.session['comic_name']=comic_name
         request.session['bubble_id']=bubble_id
-        image="img/"+comic_name+"/"+bubble_id+".jpg"
+        image="img/"+comiclists[comic_name]+"/"+bubble_id+".jpg"
 
         # 変数をページに引き渡す
     d={
@@ -139,11 +173,15 @@ def second(request):
     ### 表示するコマを設定
     img_list=select_img2(0,PATH)
     rest=len(img_list)
+    print("img_list:",end="")
     print(img_list)
     if rest==0:
         print("おわり")
+        request.session.flush()
     else:
-        print(request.POST)
+        print(request.POST.items())
+        print(request.session.items())
+        # 1回目が押された時
         if "regist0.x" in request.POST:
             if len(request.POST["utter1"])!=0 and "pn" in request.POST.keys():
                 print("登録",end="")
@@ -155,6 +193,7 @@ def second(request):
                 if len(request.POST["utter2"])!=0:
                     h.utter2=request.POST["utter2"]
                 h.save()
+        # 2回目が押された時
         if "regist1.x" in request.POST and "regist1.y" in request.POST:
             print("登録",end="")
             print(request.session["comic_name"])
@@ -163,50 +202,67 @@ def second(request):
             h.x2=request.POST["regist1.x"]
             h.y2=request.POST["regist1.y"]
             h.save()
+            
         if "bubble_num" in request.session.keys():
             if request.session["bubble_num"]==2 and models.ComicInfo.objects.get(comic_name=request.session["comic_name"],bubble_id=request.session["bubble_id"]).y2==0:
+                image="img/"+comiclists[comic_name]+"/"+bubble_id+".jpg"
                 image=request.session["image"]
                 bubble_num=request.session["bubble_num"]
                 comic_name=request.session["comic_name"]
                 bubble_id=request.session["bubble_id"]
-            elif request.session["bubble_num"]==1:
-                ### 表示するコマを設定
+                bubble=[]
+                print(bubble_num)
+                for i in range(bubble_num):
+                    bubble.append(i)
+                    print(bubble)
+                
+            else:# request.session["bubble_num"]==1:
+                #### 表示するコマを設定
                 img_list=select_img2(0,PATH)
                 rest=len(img_list)
                 print(img_list)
-                show=random.choice(img_list)
-                print("えらぶ",end="")
-                print(show)
-                comic_name=str(show[0])
-                bubble_id=str(show[1])
-                image="img/"+comic_name+"/"+bubble_id+".jpg"
-                request.session["image"]=image
-                bubble_num=models.ComicInfo.objects.get(comic_name=comic_name, bubble_id=bubble_id).bubble_num
-                request.session["bubble_num"]=bubble_num
-                request.session['comic_name']=comic_name
-                request.session['bubble_id']=bubble_id
+                if len(img_list)!=0:
+                    show=random.choice(img_list)
+                    print("えらぶ",end="")
+                    print(show)
+                    comic_name=str(show[0])
+                    bubble_id=str(show[1])
+                    image="img/"+comiclists[comic_name]+"/"+bubble_id+".jpg"
+                    request.session["image"]=image
+                    print(image)
+                    bubble_num=models.ComicInfo.objects.get(comic_name=comic_name, bubble_id=bubble_id).bubble_num
+                    print(bubble_num)
+                    request.session["bubble_num"]=bubble_num
+                    request.session['comic_name']=comic_name
+                    request.session['bubble_id']=bubble_id
+                    bubble=[]
+                    print(bubble_num)
+                    for i in range(bubble_num):
+                        bubble.append(i)
+                        print(bubble)
+                else:
+                    print("おわり")
         else:
             ### 表示するコマを設定
-            img_list=select_img2(0,PATH)
-            rest=len(img_list)
-            print(img_list)
+            #            img_list=select_img2(0,PATH)
+            #            rest=len(img_list)
             show=random.choice(img_list)
             print("えらぶ",end="")
             print(show)
             comic_name=str(show[0])
             bubble_id=str(show[1])
-            image="img/"+comic_name+"/"+bubble_id+".jpg"
+            image="img/"+comiclists[comic_name]+"/"+bubble_id+".jpg"
+            print(image)
             request.session["image"]=image
             bubble_num=models.ComicInfo.objects.get(comic_name=comic_name, bubble_id=bubble_id).bubble_num
             request.session["bubble_num"]=bubble_num
             request.session['comic_name']=comic_name
             request.session['bubble_id']=bubble_id
-
-        bubble=[]
-        print(bubble_num)
-        for i in range(bubble_num):
-            bubble.append(i)
-            print(bubble)
+            bubble=[]
+            print(bubble_num)
+            for i in range(bubble_num):
+                bubble.append(i)
+                print(bubble)
 
     d={
         'utter_form1' : utter_form1,

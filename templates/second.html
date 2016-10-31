@@ -9,14 +9,6 @@ body {
 margin-bottom: 50px;
 }
 </style>
-<script>
-  function getXY(e) {
-    x = e.pageX - $("#hoge").offset()["left"];
-    y = e.pageY - $("#hoge").offset()["top"];
-    $("#pos_x").text(x);
-    $("#pos_y").text(y);
-  }
-</script>
 {% endblock %}
 {% block content %}
 <h1 class="page-header">マンガのアノテーション 2</h1>
@@ -46,11 +38,9 @@ margin-bottom: 50px;
 	    {% endfor %}
 	  </div>
       </td></tr><tr><td colspan="2" align="center">
-	  <b>x1:</b><span id="pos_x">0</span>, <b>y1:</b><span id="pos_y">0</span>
-      </td></tr><tr><td colspan="2" align="center">
 	  {% load static %}
 	  {% for i in bubble_num %}
-	  <input type="image" src="{% static image %}" name="regist{{ i }}">
+	  <input type="image" src="{% static image %}" name="regist{{ i }}" id="mycanvas">
 	  {% endfor %}
     </td></tr></table>
   </form>
